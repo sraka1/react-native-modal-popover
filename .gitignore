@@ -1,5 +1,4 @@
 /src/.watchmanconfig
-/lib/
 /node_modules/
 /.idea
 *.iml

@@ -52,6 +52,9 @@ const styles: any = StyleSheet.create({
     borderBottomColor: 'transparent',
     borderLeftColor: 'transparent',
   },
+  showContent: {
+    backgroundColor: 'white'
+  },
 });
 
 const ARROW_DEG: { [index in Placement]: string } = {
@@ -85,6 +88,7 @@ export interface PopoverState extends Geometry {
   visible: boolean;
   isAwaitingShow: boolean;
   animation: Animated.Value;
+  showContent: boolean;
 }
 
 type LayoutCallback =
@@ -144,6 +148,7 @@ export class Popover extends React.PureComponent<PopoverProps, PopoverState> {
       visible: false,
       isAwaitingShow: false,
       animation: new Animated.Value(0),
+      showContent: true
     };
     this.onOrientationChange();
   }
@@ -224,14 +229,16 @@ export class Popover extends React.PureComponent<PopoverProps, PopoverState> {
   }
 
   private startAnimation = (show: boolean) => {
-    const doneCallback = show ? undefined : this.onHidden;
+    const doneCallback = show ? this.onShown : this.onHidden;
     Animated.timing(this.state.animation, {
       toValue: show ? 1 : 0,
       duration: this.props.duration,
-      easing: this.props.easing!(show),
-      useNativeDriver: !!this.props.useNativeDriver,
+      // easing: this.props.easing!(show),
+      useNativeDriver: true,
     }).start(doneCallback);
   };
+
+  private onShown = () => setTimeout(() => {console.log('shown'); this.setState({ showContent: true })}, 500);
 
   private onHidden = () => this.setState({ visible: false, isAwaitingShow: false });
 
@@ -272,14 +279,14 @@ export class Popover extends React.PureComponent<PopoverProps, PopoverState> {
           borderBottomWidth: height / 2,
           borderLeftWidth: width / 2,
           transform: [
-            {
+            /*{
               // Animation is workaround for https://github.com/facebook/react-native/issues/14161
               rotate: animation.interpolate({
                 inputRange: [0, 1],
                 outputRange: [ARROW_DEG[this.state.placement], ARROW_DEG[this.state.placement]],
                 extrapolate: 'clamp',
               }),
-            },
+            },*/
             {
               scale: animation.interpolate({
                 inputRange: [0, 1],
@@ -335,14 +342,14 @@ export class Popover extends React.PureComponent<PopoverProps, PopoverState> {
         <View style={[styles.container, contentSizeAvailable && styles.containerVisible]}>
 
           <TouchableWithoutFeedback onPress={this.props.onClose}>
-            <Animated.View style={computedStyles.background} useNativeDriver={useNativeDriver} />
+            <Animated.View style={computedStyles.background} useNativeDriver={true} />
           </TouchableWithoutFeedback>
 
-          <Animated.View style={computedStyles.popover} useNativeDriver={useNativeDriver}>
-            <Animated.View onLayout={this.measureContent} style={computedStyles.content} useNativeDriver={useNativeDriver} >
+          <Animated.View style={computedStyles.popover} useNativeDriver={true}>
+            <Animated.View onLayout={this.measureContent} style={[computedStyles.content, this.state.showContent && styles.showContent]} useNativeDriver={true} >
               {this.props.children}
             </Animated.View>
-            <Animated.View style={computedStyles.arrow} useNativeDriver={useNativeDriver} />
+            <Animated.View style={computedStyles.arrow} useNativeDriver={true} />
           </Animated.View>
 
         </View>
